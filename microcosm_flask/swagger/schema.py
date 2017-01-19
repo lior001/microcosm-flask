@@ -122,12 +122,6 @@ def build_parameter(field):
     if isinstance(field, fields.List):
         parameter["items"] = build_parameter(field.container)
 
-    if field.allow_none:
-        # XXX Update to new name when we switch to next version of OpenAPI
-        # spec
-        # See https://github.com/OAI/OpenAPI-Specification/pull/741
-        parameter["x-nullable"] = True
-
     return parameter
 
 
@@ -140,7 +134,7 @@ def build_schema(marshmallow_schema):
     required_fields = [
         field.dump_to or name
         for name, field in fields
-        if field.required
+        if field.required and not field.allow_none
     ]
     schema = {
         "type": "object",
