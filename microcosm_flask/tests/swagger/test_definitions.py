@@ -70,6 +70,12 @@ def test_build_swagger():
                     },
                     "parameters": [
                         {
+                            "in": "header",
+                            "name": "X-Response-Skip-Null",
+                            "required": False,
+                            "type": "string",
+                        },
+                        {
                             "in": "body",
                             "name": "body",
                             "schema": {
@@ -98,6 +104,12 @@ def test_build_swagger():
                         },
                     },
                     "parameters": [
+                        {
+                            "required": False,
+                            "type": "string",
+                            "name": "X-Response-Skip-Null",
+                            "in": "header",
+                        },
                         {
                             "required": True,
                             "type": "string",
