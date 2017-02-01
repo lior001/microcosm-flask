@@ -49,7 +49,6 @@ class Convention(object):
         mappings.update(kwargs)
 
         for operation, definition in mappings.items():
-
             try:
                 configure_func = self._find_func(operation)
             except AttributeError:

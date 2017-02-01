@@ -57,6 +57,17 @@ def instance_path_for(name):
     )
 
 
+def alias_path_for(name):
+    """
+    Get a path for an alias to a thing
+
+    """
+    return "/{}/<{}_name>".format(
+        name_for(name),
+        name_for(name),
+    )
+
+
 def relation_path_for(from_name, to_name):
     """
     Get a path relating a thing to another.

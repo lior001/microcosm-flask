@@ -18,6 +18,7 @@ Note that:
 """
 from logging import getLogger
 from six import string_types
+from six.moves.urllib.parse import unquote
 from werkzeug.routing import BuildError
 
 from openapi import model as swagger
@@ -121,11 +122,13 @@ def build_path(operation, ns):
     try:
         return ns.url_for(operation, _external=False)
     except BuildError as error:
+        # we are missing some URI path parameters
         uri_templates = {
             argument: "{{{}}}".format(argument)
             for argument in error.suggested.arguments
         }
-        return ns.url_for(operation, _external=False, **uri_templates)
+        # flask will sometimes try to quote '{' and '}' characters
+        return unquote(ns.url_for(operation, _external=False, **uri_templates))
 
 
 def body_param(schema):
