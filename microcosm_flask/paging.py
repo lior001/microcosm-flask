@@ -2,6 +2,7 @@
 Pagination support.
 
 """
+from flask import request
 from marshmallow import fields, Schema
 
 from microcosm_flask.linking import Link, Links
@@ -9,8 +10,8 @@ from microcosm_flask.operations import Operation
 
 
 class PageSchema(Schema):
-    offset = fields.Integer(missing=0, default=0)
-    limit = fields.Integer(missing=20, limit=20)
+    offset = fields.Integer(missing=None)
+    limit = fields.Integer(missing=None)
 
 
 def make_paginated_list_schema(ns, item_schema):
@@ -36,10 +37,21 @@ def make_paginated_list_schema(ns, item_schema):
 
 class Page(object):
 
-    def __init__(self, offset, limit, **rest):
-        self.offset = offset
-        self.limit = limit
+    def __init__(self, offset=None, limit=None, **rest):
+        self.offset = self.default_offset if offset is None else offset
+        self.limit = self.default_limit if limit is None else limit
         self.rest = rest
+
+    @property
+    def default_offset(self):
+        return 0
+
+    @property
+    def default_limit(self):
+        try:
+            return int(request.headers["X-Request-Limit"])
+        except:
+            return 20
 
     @classmethod
     def from_query_string(cls, qs):
