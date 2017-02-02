@@ -39,6 +39,7 @@ class Operation(Enum):
     Delete = OperationInfo("delete", "DELETE", NODE_PATTERN, 204)
     Replace = OperationInfo("replace", "PUT", NODE_PATTERN, 200)
     Update = OperationInfo("update", "PATCH", NODE_PATTERN, 200)
+    Alias = OperationInfo("alias", "GET", NODE_PATTERN, 302)
 
     # relation operations
     CreateFor = OperationInfo("create_for", "POST", EDGE_PATTERN, 201)

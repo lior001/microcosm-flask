@@ -12,6 +12,7 @@ from six.moves.urllib.parse import urlencode, urljoin
 from werkzeug.exceptions import InternalServerError
 
 from microcosm_flask.naming import (
+    alias_path_for,
     collection_path_for,
     instance_path_for,
     name_for,
@@ -91,6 +92,10 @@ class Namespace(object):
     @property
     def instance_path(self):
         return self.path + instance_path_for(self.subject)
+
+    @property
+    def alias_path(self):
+        return self.path + alias_path_for(self.subject)
 
     @property
     def relation_path(self):
