@@ -48,7 +48,10 @@ class Page(object):
 
     @property
     def default_limit(self):
-        return request.headers.get("X-Request-Limit", 20)
+        try:
+            return int(request.headers["X-Request-Limit"])
+        except:
+            return 20
 
     @classmethod
     def from_query_string(cls, qs):
