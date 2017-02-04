@@ -39,6 +39,16 @@ def test_page_defaults():
         "limit": 20
     })))
 
+def test_page_defaults_with_page_schema():
+    graph = create_object_graph(name="example", testing=True)
+
+    with graph.flask.test_request_context():
+        page = Page.from_query_string(PageSchema().load({}).data)
+
+    assert_that(page.to_dict(), is_(equal_to({
+        "offset": 0,
+        "limit": 20
+    })))
 
 def test_page_to_dict():
     page = Page(0, 10)
