@@ -39,6 +39,7 @@ def test_page_defaults():
         "limit": 20
     })))
 
+
 def test_page_defaults_with_page_schema():
     graph = create_object_graph(name="example", testing=True)
 
@@ -49,6 +50,7 @@ def test_page_defaults_with_page_schema():
         "offset": 0,
         "limit": 20
     })))
+
 
 def test_page_to_dict():
     page = Page(0, 10)
