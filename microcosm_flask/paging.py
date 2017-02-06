@@ -2,6 +2,9 @@
 Pagination support.
 
 """
+from enum import Enum
+from uuid import UUID
+
 from flask import request
 from marshmallow import fields, Schema
 
@@ -96,9 +99,24 @@ class Page(object):
             ("offset", self.offset),
             ("limit", self.limit),
         ] + [
-            (key, self.rest[key])
+            (key, self.to_value(self.rest[key]))
             for key in sorted(self.rest.keys())
         ]
+
+    def to_value(self, value):
+        """
+        Cast query string parameter value to string for commonly used
+        types such as enumeration values and UUIDs.
+
+        :param value - a query parameter value
+        :returns value cast to string if value is one of pre-specified types (UUID, Enum)
+            or the value as-is otherwise.
+
+        """
+        if isinstance(value, (UUID, Enum)):
+            return str(value)
+
+        return value
 
 
 class PaginatedList(object):
