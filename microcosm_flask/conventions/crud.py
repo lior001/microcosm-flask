@@ -47,7 +47,7 @@ class CRUDConvention(Convention):
         def search(**path_data):
             request_data = load_query_string_data(definition.request_schema)
             page = self.page_cls.from_query_string(request_data)
-            return_value = definition.func(**merge_data(path_data, request_data))
+            return_value = definition.func(**merge_data(path_data, page.to_dict()))
 
             if len(return_value) == 3:
                 items, count, context = return_value
