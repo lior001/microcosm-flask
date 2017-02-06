@@ -165,7 +165,13 @@ def test_custom_paginated_list():
     uid = uuid4()
     paginated_list = PaginatedList(
         ns,
-        Page.from_query_string(dict(offset=2, limit=2, baz="baz", uid=uid, value=MyEnum.ONE)),
+        Page.from_query_string(dict(
+            offset=2,
+            limit=2,
+            baz="baz",
+            uid=uid,
+            value=MyEnum.ONE,
+        )),
         ["1", "2"],
         10,
         operation=Operation.SearchFor,
