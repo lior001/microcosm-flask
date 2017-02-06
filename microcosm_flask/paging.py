@@ -96,7 +96,7 @@ class Page(object):
             ("offset", self.offset),
             ("limit", self.limit),
         ] + [
-            (key, str(self.rest[key]))
+            (key, self.rest[key])
             for key in sorted(self.rest.keys())
         ]
 
