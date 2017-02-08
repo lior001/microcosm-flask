@@ -2,14 +2,19 @@
 Pagination support.
 
 """
-from enum import Enum
-from uuid import UUID
-
 from flask import request
 from marshmallow import fields, Schema
 
 from microcosm_flask.linking import Link, Links
 from microcosm_flask.operations import Operation
+
+
+def identity(x):
+    """
+    Identity function.
+
+    """
+    return x
 
 
 class PageSchema(Schema):
@@ -87,36 +92,23 @@ class Page(object):
             **self.rest
         )
 
-    def to_dict(self):
-        return dict(self.to_tuples())
+    def to_dict(self, as_str=False):
+        return dict(self.to_tuples(as_str=as_str))
 
-    def to_tuples(self):
+    def to_tuples(self, as_str=True):
         """
         Convert to tuples for deterministic order when passed to urlencode.
 
         """
+        value_func = str if as_str else identity
+
         return [
             ("offset", self.offset),
             ("limit", self.limit),
         ] + [
-            (key, self.to_value(self.rest[key]))
+            (key, value_func(self.rest[key]))
             for key in sorted(self.rest.keys())
         ]
-
-    def to_value(self, value):
-        """
-        Cast query string parameter value to string for commonly used
-        types such as enumeration values and UUIDs.
-
-        :param value - a query parameter value
-        :returns value cast to string if value is one of pre-specified types (UUID, Enum)
-            or the value as-is otherwise.
-
-        """
-        if isinstance(value, (UUID, Enum)):
-            return str(value)
-
-        return value
 
 
 class PaginatedList(object):
@@ -145,7 +137,7 @@ class PaginatedList(object):
                 for item in self.items
             ],
             _links=self._links,
-            **self.page.to_dict()
+            **self.page.to_dict(as_str=True)
         )
 
     @property
