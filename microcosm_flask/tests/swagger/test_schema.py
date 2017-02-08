@@ -117,6 +117,7 @@ def test_field_decimal_as_string():
     parameter = build_parameter(TestSchema().fields["decimalString"])
     assert_that(parameter, is_(equal_to({
         "type": "string",
+        "format": "decimal",
     })))
 
 

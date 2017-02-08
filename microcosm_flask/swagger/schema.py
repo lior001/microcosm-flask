@@ -94,8 +94,11 @@ def build_parameter(field):
         parameter["format"] = field_format
     if field.default:
         parameter["default"] = field.default
+    # NB: all marshallow Number fields support as_string
     if getattr(field, 'as_string', None):
         parameter["type"] = "string"
+        if isinstance(field, fields.Decimal):
+            parameter["format"] = "decimal"
 
     # enums
     enum = getattr(field, "enum", None)
