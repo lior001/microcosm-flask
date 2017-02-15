@@ -17,6 +17,12 @@ def with_context(error, errors):
     return error
 
 
+def encode_count_header(count):
+    return {
+        "X-Total-Count": count,
+    }
+
+
 def load_request_data(request_schema, partial=False):
     """
     Load request data as JSON using the given schema.

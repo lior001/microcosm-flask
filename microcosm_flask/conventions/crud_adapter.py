@@ -42,6 +42,10 @@ class CRUDStoreAdapter(object):
         count = self.store.count(**kwargs)
         return items, count
 
+    def count(self, offset=None, limit=None, **kwargs):
+        count = self.store.count(**kwargs)
+        return count
+
     def update(self, **kwargs):
         identifier = kwargs.pop(self.identifier_key)
         model = self.store.model_class(id=identifier, **kwargs)

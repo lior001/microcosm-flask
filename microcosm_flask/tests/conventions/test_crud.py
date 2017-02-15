@@ -104,6 +104,12 @@ class TestCrud(object):
             }
         })
 
+    def test_count(self):
+        uri = "/api/person"
+        response = self.client.head(uri)
+        assert_that(response.status_code, is_(equal_to(200)))
+        assert_that(response.headers["X-Total-Count"], is_(equal_to(str(1))))
+
     def test_search_with_context(self):
         uri = "/api/person/{}/address".format(PERSON_ID_1)
         response = self.client.get(uri)

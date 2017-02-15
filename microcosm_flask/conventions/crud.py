@@ -7,6 +7,7 @@ from inflection import pluralize
 from microcosm_flask.conventions.base import Convention
 from microcosm_flask.conventions.encoding import (
     dump_response_data,
+    encode_count_header,
     load_query_string_data,
     load_request_data,
     merge_data,
@@ -64,9 +65,35 @@ class CRUDConvention(Convention):
                 operation=Operation.Search,
                 **context
             )
-            return dump_response_data(paginated_list_schema, response_data)
+
+            headers = encode_count_header(count)
+            return dump_response_data(paginated_list_schema, response_data, headers=headers)
 
         search.__doc__ = "Search the collection of all {}".format(pluralize(ns.subject_name))
+
+    def configure_count(self, ns, definition):
+        """
+        Register a count endpoint.
+
+        The definition's func should be a count function, which must:
+        - accept kwargs for the query string
+        - return a count is the total number of items available
+
+        The definition's request_schema will be used to process query string arguments.
+
+        :param ns: the namespace
+        :param definition: the endpoint definition
+
+        """
+        @self.graph.route(ns.collection_path, Operation.Count, ns)
+        @qs(definition.request_schema)
+        def count(**path_data):
+            request_data = load_query_string_data(definition.request_schema)
+            count = definition.func(**merge_data(path_data, request_data))
+            headers = encode_count_header(count)
+            return dump_response_data(None, None, headers=headers)
+
+        count.__doc__ = "Count the size of the collection of all {}".format(pluralize(ns.subject_name))
 
     def configure_create(self, ns, definition):
         """
