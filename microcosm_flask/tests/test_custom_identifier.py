@@ -40,7 +40,7 @@ class ContentBasedAddressConverter(BaseConverter):
             key: str(value)
             for key, value in obj.__dict__.items()
         }, sort_keys=True)
-        return sha256(content).hexdigest()
+        return sha256(content.encode("utf-8")).hexdigest()
 
 
 @binding("cba")
