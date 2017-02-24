@@ -2,7 +2,7 @@
 Conventions for file upload.
 
 """
-from contextlib import contextmanager, nested
+from contextlib import contextmanager
 from os.path import join
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -19,6 +19,24 @@ from microcosm_flask.conventions.registry import qs, response
 from microcosm_flask.operations import Operation
 from werkzeug.exceptions import BadRequest
 from werkzeug.utils import secure_filename
+
+
+try:
+    # Python 2
+    from contextlib import nested
+except ImportError:
+    # Python3
+    from contextlib import ExitStack
+
+    @contextmanager
+    def nested(*contexts):
+        """
+        Reimplementation of nested in python 3.
+        """
+        with ExitStack() as stack:
+            for ctx in contexts:
+                stack.enter_context(ctx)
+            yield contexts
 
 
 @contextmanager
