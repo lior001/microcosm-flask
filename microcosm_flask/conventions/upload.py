@@ -54,8 +54,10 @@ def temporary_upload(name, fileobj):
     filename = secure_filename(fileobj.filename)
     filepath = join(tempdir, filename)
     fileobj.save(filepath)
-    yield name, filepath, fileobj.filename
-    rmtree(tempdir)
+    try:
+        yield name, filepath, fileobj.filename
+    except:
+        rmtree(tempdir)
 
 
 class UploadConvention(Convention):
