@@ -34,9 +34,11 @@ except ImportError:
         Reimplementation of nested in python 3.
         """
         with ExitStack() as stack:
-            for ctx in contexts:
-                stack.enter_context(ctx)
-            yield contexts
+            results = [
+                stack.enter_context(context)
+                for context in contexts
+            ]
+            yield results
 
 
 @contextmanager
