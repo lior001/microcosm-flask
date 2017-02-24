@@ -50,6 +50,10 @@ class Operation(Enum):
     SearchFor = OperationInfo("search_for", "GET", EDGE_PATTERN, 200)
     UpdateFor = OperationInfo("update_for", "PATCH", EDGE_PATTERN, 200)
 
+    # file upload operations
+    Upload = OperationInfo("upload", "POST", NODE_PATTERN, 200)
+    UploadFor = OperationInfo("upload_for", "POST", EDGE_PATTERN, 200)
+
     # ad hoc operations
     Command = OperationInfo("command", "POST", NODE_PATTERN, 200)
     Query = OperationInfo("query", "GET", NODE_PATTERN, 200)
