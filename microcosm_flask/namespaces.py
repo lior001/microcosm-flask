@@ -33,15 +33,14 @@ class Namespace(object):
 
     """
 
-    def __init__(
-        self,
-        subject,
-        object_=None,
-        path=None,
-        controller=None,
-        version=None,
-        enable_basic_auth=False
-    ):
+    def __init__(self,
+                 subject,
+                 object_=None,
+                 path=None,
+                 controller=None,
+                 version=None,
+                 enable_basic_auth=False,
+                 identifier_type="uuid"):
         """
         :param subject: the target resource (or resource name) of this namespace
         :param object_: the subject resource (or resource name) of this namespace (e.g. for relations)
@@ -56,6 +55,7 @@ class Namespace(object):
         self.controller = controller
         self.version = version
         self.enable_basic_auth = enable_basic_auth
+        self.identifier_type = identifier_type
 
     @property
     def path(self):
@@ -91,7 +91,7 @@ class Namespace(object):
 
     @property
     def instance_path(self):
-        return self.path + instance_path_for(self.subject)
+        return self.path + instance_path_for(self.subject, self.identifier_type)
 
     @property
     def alias_path(self):
@@ -99,7 +99,7 @@ class Namespace(object):
 
     @property
     def relation_path(self):
-        return self.path + relation_path_for(self.subject, self.object_)
+        return self.path + relation_path_for(self.subject, self.object_, self.identifier_type)
 
     @property
     def singleton_path(self):
