@@ -46,7 +46,7 @@ def temporary_upload(name, fileobj):
     """
     Upload a file to a temporary location.
 
-    Flask will not load sufficiently large (>500M) files into memory, so it
+    Flask will not load sufficiently large files into memory, so it
     makes sense to always load files into a temporary directory.
 
     """
