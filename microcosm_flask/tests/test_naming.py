@@ -46,8 +46,10 @@ def test_singletone_path():
 
 
 def test_instance_path():
-    assert_that(instance_path_for("foo"), is_(equal_to("/foo/<uuid:foo_id>")))
+    assert_that(instance_path_for("foo", "uuid"), is_(equal_to("/foo/<uuid:foo_id>")))
+    assert_that(instance_path_for("foo", "bar"), is_(equal_to("/foo/<bar:foo_id>")))
 
 
 def test_relation_path():
-    assert_that(relation_path_for("foo", "bar"), is_(equal_to("/foo/<uuid:foo_id>/bar")))
+    assert_that(relation_path_for("foo", "bar", "uuid"), is_(equal_to("/foo/<uuid:foo_id>/bar")))
+    assert_that(relation_path_for("foo", "bar", "baz"), is_(equal_to("/foo/<baz:foo_id>/bar")))

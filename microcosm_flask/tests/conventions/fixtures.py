@@ -81,6 +81,7 @@ ADDRESS_ID_1 = uuid4()
 PERSON_ID_1 = uuid4()
 PERSON_ID_2 = uuid4()
 PERSON_1 = Person(PERSON_ID_1, "Alice", "Smith")
+PERSON_2 = Person(PERSON_ID_2, "Bob", "Jones")
 ADDRESS_1 = Address(ADDRESS_ID_1, PERSON_ID_1, "21 Acme St., San Francisco CA 94110")
 
 
