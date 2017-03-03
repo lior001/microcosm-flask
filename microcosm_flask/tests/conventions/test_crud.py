@@ -32,10 +32,12 @@ from microcosm_flask.tests.conventions.fixtures import (
     person_update_batch,
     Person,
     PersonBatchSchema,
+    PersonLookupSchema,
     PersonSchema,
     ADDRESS_ID_1,
     PERSON_ID_1,
     PERSON_ID_2,
+    PERSON_ID_3,
 )
 
 
@@ -44,7 +46,7 @@ PERSON_MAPPINGS = {
     Operation.Delete: (person_delete,),
     Operation.UpdateBatch: (person_update_batch, NewPersonBatchSchema(), PersonBatchSchema()),
     Operation.Replace: (person_replace, NewPersonSchema(), PersonSchema()),
-    Operation.Retrieve: (person_retrieve, PersonSchema()),
+    Operation.Retrieve: (person_retrieve, PersonLookupSchema(), PersonSchema()),
     Operation.Search: (person_search, PageSchema(), PersonSchema()),
     Operation.Update: (person_update, NewPersonSchema(), PersonSchema()),
 }
@@ -221,6 +223,20 @@ class TestCrud(object):
             "_links": {
                 "self": {
                     "href": "http://localhost/api/person/{}".format(PERSON_ID_1),
+                }
+            },
+        })
+
+    def test_retrieve_qs(self):
+        uri = "/api/person/{}?family_member=true".format(PERSON_ID_1)
+        response = self.client.get(uri)
+        self.assert_response(response, 200, {
+            "id": str(PERSON_ID_3),
+            "firstName": "Charlie",
+            "lastName": "Smith",
+            "_links": {
+                "self": {
+                    "href": "http://localhost/api/person/{}".format(PERSON_ID_3),
                 }
             },
         })
