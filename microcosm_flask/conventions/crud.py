@@ -3,6 +3,7 @@ Conventions for canonical CRUD endpoints.
 
 """
 from inflection import pluralize
+from marshmallow import Schema
 
 from microcosm_flask.conventions.base import Convention
 from microcosm_flask.conventions.encoding import (
@@ -153,10 +154,14 @@ class CRUDConvention(Convention):
         :param definition: the endpoint definition
 
         """
+        request_schema = definition.request_schema or Schema()
+
         @self.graph.route(ns.instance_path, Operation.Retrieve, ns)
+        @qs(request_schema)
         @response(definition.response_schema)
         def retrieve(**path_data):
-            response_data = require_response_data(definition.func(**path_data))
+            request_data = load_query_string_data(request_schema)
+            response_data = require_response_data(definition.func(**merge_data(path_data, request_data)))
             return dump_response_data(definition.response_schema, response_data)
 
         retrieve.__doc__ = "Retrieve a {} by id".format(ns.subject_name)
