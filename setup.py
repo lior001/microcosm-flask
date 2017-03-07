@@ -43,6 +43,7 @@ setup(
             "app = microcosm_flask.factories:configure_flask_app",
             "audit = microcosm_flask.audit:configure_audit_decorator",
             "basic_auth = microcosm_flask.basic_auth:configure_basic_auth_decorator",
+            "build_info_convention = microcosm_flask.conventions.build_info:configure_build_info",
             "discovery_convention = microcosm_flask.conventions.discovery:configure_discovery",
             "error_handlers = microcosm_flask.errors:configure_error_handlers",
             "flask = microcosm_flask.factories:configure_flask",
