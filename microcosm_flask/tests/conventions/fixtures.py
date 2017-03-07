@@ -73,6 +73,10 @@ class PersonSchema(NewPersonSchema):
         return links.to_dict()
 
 
+class PersonLookupSchema(Schema):
+    family_member = fields.Boolean(required=False)
+
+
 class PersonBatchSchema(NewPersonSchema):
     items = fields.List(fields.Nested(PersonSchema))
 
@@ -80,8 +84,10 @@ class PersonBatchSchema(NewPersonSchema):
 ADDRESS_ID_1 = uuid4()
 PERSON_ID_1 = uuid4()
 PERSON_ID_2 = uuid4()
+PERSON_ID_3 = uuid4()
 PERSON_1 = Person(PERSON_ID_1, "Alice", "Smith")
 PERSON_2 = Person(PERSON_ID_2, "Bob", "Jones")
+PERSON_3 = Person(PERSON_ID_3, "Charlie", "Smith")
 ADDRESS_1 = Address(ADDRESS_ID_1, PERSON_ID_1, "21 Acme St., San Francisco CA 94110")
 
 
@@ -110,8 +116,10 @@ def person_update_batch(items):
     )
 
 
-def person_retrieve(person_id):
-    if person_id == PERSON_ID_1:
+def person_retrieve(person_id, family_member=None):
+    if family_member:
+        return PERSON_3
+    elif person_id == PERSON_ID_1:
         return PERSON_1
     else:
         return None
