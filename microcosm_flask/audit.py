@@ -93,12 +93,12 @@ class RequestInfo(object):
         if self.request_context is not None:
             dct.update(self.request_context())
 
-        if self.success:
+        if self.success is True:
             dct.update(
                 success=self.success,
                 status_code=self.status_code,
             )
-        else:
+        if self.success is False:
             dct.update(
                 success=self.success,
                 message=extract_error_message(self.error)[:2048],
@@ -111,6 +111,14 @@ class RequestInfo(object):
         self.post_process_response_body(dct)
 
         return dct
+
+    def log(self, logger):
+        if self.status_code == 500:
+            # something actually went wrong; investigate
+            logger.warning(self.to_dict())
+        else:
+            # usually log at INFO; a raised exception can be an error or expected behavior (e.g. 404)
+            logger.info(self.to_dict())
 
     def capture_request(self):
         if not current_app.debug:
@@ -155,11 +163,6 @@ class RequestInfo(object):
         self.status_code = extract_status_code(error)
         self.success = 0 < self.status_code < 400
         self.stack_trace = format_exc(limit=10)
-
-    def post_process_request(self):
-        # determine whether to show/hide body based on the g values set during func
-        self.post_process_request_body()
-        self.post_process_response_body()
 
     def post_process_request_body(self, dct):
         if g.get("hide_body") or not self.request_body:
@@ -227,12 +230,7 @@ def _audit_request(options, func, request_context, *args, **kwargs):  # noqa: C9
         return response
     finally:
         if not should_skip_logging(func):
-            if request_info.status_code == 500:
-                # something actually went wrong; investigate
-                logger.warning(request_info.to_dict())
-            else:
-                # usually log at INFO; a raised exception can be an error or expected behavior (e.g. 404)
-                logger.info(request_info.to_dict())
+            request_info.log(logger)
 
 
 def parse_response(response):
