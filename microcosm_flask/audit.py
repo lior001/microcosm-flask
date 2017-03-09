@@ -229,7 +229,7 @@ def _audit_request(options, func, request_context, *args, **kwargs):  # noqa: C9
         if not should_skip_logging(func):
             if request_info.status_code == 500:
                 # something actually went wrong; investigate
-                logger.warn(request_info.to_dict())
+                logger.warning(request_info.to_dict())
             else:
                 # usually log at INFO; a raised exception can be an error or expected behavior (e.g. 404)
                 logger.info(request_info.to_dict())
