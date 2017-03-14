@@ -164,7 +164,7 @@ class RequestInfo(object):
         self.status_code = extract_status_code(error)
         self.success = 0 < self.status_code < 400
         include_stack_trace = extract_include_stack_trace(error)
-        self.stack_trace = format_exc(limit=10) if (not success and include_stack_trace) else None
+        self.stack_trace = format_exc(limit=10) if (not self.success and include_stack_trace) else None
 
     def post_process_request_body(self, dct):
         if g.get("hide_body") or not self.request_body:
