@@ -13,6 +13,7 @@ from microcosm.api import defaults
 from microcosm_flask.errors import (
     extract_context,
     extract_error_message,
+    extract_include_stack_trace,
     extract_status_code,
 )
 from microcosm_logging.timing import elapsed_time
@@ -101,11 +102,12 @@ def _audit_request(options, func, request_context, *args, **kwargs):  # noqa: C9
     except Exception as error:
         status_code = extract_status_code(error)
         success = 0 < status_code < 400
+        include_stack_trace = extract_include_stack_trace(error)
         audit_dict.update(
             success=success,
             message=extract_error_message(error)[:2048],
             context=extract_context(error),
-            stack_trace=None if success else format_exc(limit=10),
+            stack_trace=format_exc(limit=10) if (not success and include_stack_trace) else None,
             status_code=status_code,
         )
         raise
