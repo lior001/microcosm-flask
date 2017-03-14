@@ -33,7 +33,12 @@ def load_request_data(request_schema, partial=False):
     HTTP 400 and 415 errors.
 
     """
-    json_data = request.get_json(force=True) or {}
+    try:
+        json_data = request.get_json(force=True) or {}
+    except:
+        # if `simplpejson` is installed, simplejson.scanner.JSONDecodeError will be raised
+        # on malformed JSON, where as built-in `json` returns None
+        json_data = {}
     request_data = request_schema.load(json_data, partial=partial)
     if request_data.errors:
         # pass the validation errors back in the context
