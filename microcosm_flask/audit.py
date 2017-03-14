@@ -13,6 +13,7 @@ from microcosm.api import defaults
 from microcosm_flask.errors import (
     extract_context,
     extract_error_message,
+    extract_include_stack_trace,
     extract_status_code,
 )
 from microcosm_logging.timing import elapsed_time
@@ -162,7 +163,8 @@ class RequestInfo(object):
         self.error = error
         self.status_code = extract_status_code(error)
         self.success = 0 < self.status_code < 400
-        self.stack_trace = format_exc(limit=10)
+        include_stack_trace = extract_include_stack_trace(error)
+        self.stack_trace = format_exc(limit=10) if (not success and include_stack_trace) else None
 
     def post_process_request_body(self, dct):
         if g.get("hide_body") or not self.request_body:

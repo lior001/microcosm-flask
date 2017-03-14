@@ -104,6 +104,14 @@ def extract_headers(error):
     return getattr(error, "headers",  {})
 
 
+def extract_include_stack_trace(error):
+    """
+    Extract whether error should include a stack trace.
+
+    """
+    return getattr(error, "include_stack_trace", True)
+
+
 def make_json_error(error):
     """
     Handle errors by logging and
