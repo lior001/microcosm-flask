@@ -13,6 +13,7 @@ from microcosm.api import defaults
 from microcosm_flask.errors import (
     extract_context,
     extract_error_message,
+    extract_include_stack_trace,
     extract_status_code,
 )
 from microcosm_logging.timing import elapsed_time
@@ -62,6 +63,152 @@ def audit(func):
     return wrapper
 
 
+class RequestInfo(object):
+    """
+    Capture of key information for requests.
+
+    """
+    def __init__(self, options, func, request_context):
+        self.options = options
+        self.operation = request.endpoint
+        self.func = func.__name__
+        self.method = request.method
+        self.request_context = request_context
+        self.timing = dict()
+
+        self.error = None
+        self.stack_trace = None
+        self.request_body = None
+        self.response_body = None
+        self.status_code = None
+        self.success = None
+
+    def to_dict(self):
+        dct = dict(
+            operation=self.operation,
+            func=self.func,
+            method=self.method,
+            **self.timing
+        )
+
+        if self.request_context is not None:
+            dct.update(self.request_context())
+
+        if self.success is True:
+            dct.update(
+                success=self.success,
+                status_code=self.status_code,
+            )
+        if self.success is False:
+            dct.update(
+                success=self.success,
+                message=extract_error_message(self.error)[:2048],
+                context=extract_context(self.error),
+                stack_trace=self.stack_trace,
+                status_code=self.status_code,
+            )
+
+        self.post_process_request_body(dct)
+        self.post_process_response_body(dct)
+
+        return dct
+
+    def log(self, logger):
+        if self.status_code == 500:
+            # something actually went wrong; investigate
+            logger.warning(self.to_dict())
+        else:
+            # usually log at INFO; a raised exception can be an error or expected behavior (e.g. 404)
+            logger.info(self.to_dict())
+
+    def capture_request(self):
+        if not current_app.debug:
+            # only capture request body on debug
+            return
+
+        if not self.options.include_request_body:
+            # only capture request body if requested
+            return
+
+        if not request.get_json(force=True, silent=True):
+            # only capture request body if json
+            return
+
+        self.request_body = request.get_json(force=True)
+
+    def capture_response(self, response):
+        self.success = True
+
+        body, self.status_code = parse_response(response)
+
+        if not current_app.debug:
+            # only capture responsebody on debug
+            return
+
+        if not self.options.include_response_body:
+            # only capture response body if requested
+            return
+
+        if not body:
+            # only capture request body if there is one
+            return
+
+        try:
+            self.response_body = loads(body)
+        except (TypeError, ValueError):
+            # not json
+            pass
+
+    def capture_error(self, error):
+        self.error = error
+        self.status_code = extract_status_code(error)
+        self.success = 0 < self.status_code < 400
+        include_stack_trace = extract_include_stack_trace(error)
+        self.stack_trace = format_exc(limit=10) if (not self.success and include_stack_trace) else None
+
+    def post_process_request_body(self, dct):
+        if g.get("hide_body") or not self.request_body:
+            return
+
+        for name, new_name in g.get("show_request_fields", {}).items():
+            try:
+                value = self.request_body.pop(name)
+                self.request_body[new_name] = value
+            except KeyError:
+                pass
+
+        for field in g.get("hide_request_fields", []):
+            try:
+                del self.request_body[field]
+            except KeyError:
+                pass
+
+        dct.update(
+            request_body=self.request_body,
+        )
+
+    def post_process_response_body(self, dct):
+        if g.get("hide_body") or not self.response_body:
+            return
+
+        for name, new_name in g.get("show_response_fields", {}).items():
+            try:
+                value = self.response_body.pop(name)
+                self.response_body[new_name] = value
+            except KeyError:
+                pass
+
+        for field in g.get("hide_response_fields", []):
+            try:
+                del self.response_body[field]
+            except KeyError:
+                pass
+
+        dct.update(
+            response_body=self.response_body,
+        )
+
+
 def _audit_request(options, func, request_context, *args, **kwargs):  # noqa: C901
     """
     Run a request function under audit.
@@ -69,103 +216,23 @@ def _audit_request(options, func, request_context, *args, **kwargs):  # noqa: C9
     """
     logger = getLogger("audit")
 
+    request_info = RequestInfo(options, func, request_context)
     response = None
 
-    # always include these fields
-    audit_dict = dict(
-        operation=request.endpoint,
-        func=func.__name__,
-        method=request.method,
-    )
-
-    # include request body on debug (if any)
-    if all((
-        current_app.debug,
-        options.include_request_body,
-        request.get_json(force=True, silent=True),
-    )):
-        request_body = request.get_json(force=True)
-    else:
-        request_body = None
-
-    response_body = None
-
-    # include headers (conditionally)
-    if request_context is not None:
-        audit_dict.update(request_context())
-
-    # process the request
+    request_info.capture_request()
     try:
-        with elapsed_time(audit_dict):
+        # process the request
+        with elapsed_time(request_info.timing):
             response = func(*args, **kwargs)
     except Exception as error:
-        status_code = extract_status_code(error)
-        success = 0 < status_code < 400
-        audit_dict.update(
-            success=success,
-            message=extract_error_message(error)[:2048],
-            context=extract_context(error),
-            stack_trace=None if success else format_exc(limit=10),
-            status_code=status_code,
-        )
+        request_info.capture_error(error)
         raise
     else:
-        body, status_code = parse_response(response)
-
-        audit_dict.update(
-            success=True,
-            status_code=status_code,
-        )
-
-        # include response body on debug (if any)
-        if all((
-                current_app.debug,
-                options.include_response_body,
-                body,
-        )):
-            try:
-                response_body = loads(body)
-            except (TypeError, ValueError):
-                # not json
-                audit_dict["response_body"] = body
-
+        request_info.capture_response(response)
         return response
     finally:
-        # determine whether to show/hide body based on the g values set during func
-        if not g.get("hide_body"):
-            if request_body:
-                for name, new_name in g.get("show_request_fields", {}).items():
-                    try:
-                        value = request_body.pop(name)
-                        request_body[new_name] = value
-                    except KeyError:
-                        pass
-                    pass
-                for field in g.get("hide_request_fields", []):
-                    try:
-                        del request_body[field]
-                    except KeyError:
-                        pass
-                audit_dict["request_body"] = request_body
-
-            if response_body:
-                for name, new_name in g.get("show_response_fields", {}).items():
-                    try:
-                        value = response_body.pop(name)
-                        response_body[new_name] = value
-                    except KeyError:
-                        pass
-                    pass
-                for field in g.get("hide_response_fields", []):
-                    try:
-                        del response_body[field]
-                    except KeyError:
-                        pass
-                audit_dict["response_body"] = response_body
-
-        # always log at INFO; a raised exception can be an error or expected behavior (e.g. 404)
         if not should_skip_logging(func):
-            logger.info(audit_dict)
+            request_info.log(logger)
 
 
 def parse_response(response):
@@ -210,6 +277,5 @@ def configure_audit_decorator(graph):
                 include_response_body=include_response_body,
             )
             return _audit_request(options, func, graph.request_context,  *args, **kwargs)
-
         return wrapper
     return _audit

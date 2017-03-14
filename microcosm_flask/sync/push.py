@@ -127,7 +127,7 @@ def push_resource_json(session, uri, resource):
     try:
         response.raise_for_status()
     except:
-        logger.warn("Unable to replace {}".format(
+        logger.warning("Unable to replace {}".format(
             uri,
         ))
         raise
@@ -152,7 +152,7 @@ def push_resource_json_batch(session, uri, resources):
     try:
         response.raise_for_status()
     except:
-        logger.warn("Unable to replace {}".format(
+        logger.warning("Unable to replace {}".format(
             uri,
         ))
         raise
