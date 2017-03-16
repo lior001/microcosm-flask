@@ -103,6 +103,39 @@ class RelationConvention(Convention):
 
         replace.__doc__ = "Replace a {} relative to a {}".format(pluralize(ns.object_name), ns.subject_name)
 
+    def configure_updatefor(self, ns, definition):
+        """
+        Register an update-for relation endpoint.
+
+        For typical usage, this relation is not strictly required; once an object exists and has its own ID,
+        it is better to operate on it directly via dedicated CRUD routes.
+        However, in some cases, the composite key of (subject_id, object_id) is required to look up the object.
+        This happens, for example, when using DynamoDB where an object which maintains both a hash key and a range key
+        requires specifying them both for access.
+
+        The definition's func should be an update function, which must:
+
+        - accept kwargs for the new instance replacement parameters
+        - return the instance
+
+        :param ns: the namespace
+        :param definition: the endpoint definition
+
+        """
+        @self.graph.route(ns.relation_path, Operation.UpdateFor, ns)
+        @request(definition.request_schema)
+        @response(definition.response_schema)
+        def replace(**path_data):
+            request_data = load_request_data(definition.request_schema)
+            response_data = require_response_data(definition.func(**merge_data(path_data, request_data)))
+            return dump_response_data(
+                definition.response_schema,
+                response_data,
+                Operation.UpdateFor.value.default_code,
+            )
+
+        replace.__doc__ = "Replace a {} relative to a {}".format(pluralize(ns.object_name), ns.subject_name)
+
     def configure_retrievefor(self, ns, definition):
         """
         Register a relation endpoint.
