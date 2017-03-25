@@ -57,6 +57,7 @@ class SwaggerConvention(Convention):
     name="swagger",
     operations=[
         "create",
+        "create_collection",
         "create_for",
         "delete",
         "replace",
