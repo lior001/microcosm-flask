@@ -44,6 +44,6 @@ def configure_flask_app(graph):
         "error_handlers",
         "logger",
         "opaque",
-        "monitor",
+        "monitoring",
     )
     return graph.flask

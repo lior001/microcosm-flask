@@ -8,7 +8,10 @@ from flask_cors import cross_origin
 
 from microcosm.api import defaults
 from microcosm_logging.decorators import context_logger
-
+from microcosm_flask.monitoring import (
+        RouteMonitoringInfo,
+        MONITORING_METRIC_ROUTE,
+    )
 
 def make_path(graph, path):
     return graph.config.route.path_prefix + path
@@ -21,7 +24,7 @@ def make_path(graph, path):
     enable_audit=True,
     enable_basic_auth=False,
     enable_cors=True,
-    enable_monitor = True,
+    enable_monitoring=True,
     log_with_context=True,
     path_prefix="/api",
 )
@@ -68,15 +71,13 @@ def configure_route_decorator(graph):
             # set the opaque component data_func to look at the flask request context
             func = graph.opaque.initialize(graph.request_context)(func)
 
-            # keep audit decoration last (just before monitoring) so that
-            # errors raised by other decorators (except monitoring) are captured in the audit trail
+            # keep audit decoration last (before registering the route) so that
+            # errors raised by other decorators are captured in the audit trail
             if graph.config.route.enable_audit:
                 func = graph.audit(func)
 
-            # keep monitoring decoration last (before registring the route) so that
-            # it captures the timing of the entire route
-            if graph.config.route.enable_monitor:
-                func = graph.monitor(func)
+            if graph.config.route.enable_monitoring:
+                func = graph.monitoring.timing_wrapper(func, MONITORING_METRIC_ROUTE, RouteMonitoringInfo(func))
 
             graph.app.route(
                 make_path(graph, path),
